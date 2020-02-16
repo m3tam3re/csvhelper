@@ -4,7 +4,7 @@ package csvhelper
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/pkg/errors"
+	"github.com/m3tam3re/errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -12,16 +12,20 @@ import (
 	"strings"
 )
 
+const path errors.Path = "github.com/m3tam3re/csvhelper"
+
 var CsvReader *csv.Reader
 
 func createCsvReader(path string, comma rune) (*csv.Reader, error) {
+	const op errors.Op = "casvhelper.go|func: createCsvReader()"
+
 	if filepath.Ext(strings.ToLower(path)) != ".csv" {
-		err := errors.New("Filetype must be .CSV")
-		return nil, fmt.Errorf("Wrong filetype: %s", err)
+		err := errors.E(errors.Internal, path, op, fmt.Sprintf("wrong filetype, want: .csv | got: %s", filepath.Ext(strings.ToLower(path))))
+		return nil, err
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(errors.IO, path, op, err, "could not open file")
 	}
 	CsvReader = csv.NewReader(f)
 	CsvReader.Comma = comma
@@ -33,13 +37,15 @@ func createCsvReader(path string, comma rune) (*csv.Reader, error) {
 // Otherwise the returned map keys are named after the index of the field stating with 0.
 // It returns the separated values of line one as a slice of string.
 // All following lines are returned as a slice of slice of string
-func CsvGetLines(path string, comma rune, header bool) ([]map[string]string, error) {
+func GetLines(path string, comma rune, header bool) ([]map[string]string, error) {
+	const op errors.Op = "casvhelper.go|func: GetLines()"
+
 	var headerrow []string
 	var lines []map[string]string
 
 	r, err := createCsvReader(path, comma)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(errors.Internal, path, op, err, "error creating csvreader")
 	}
 	lc := 1
 	for {
